@@ -1,0 +1,8 @@
+mlflow
+tensorflow
+scipy
+numpy
+click
+flask
+boto3
+gunicorn

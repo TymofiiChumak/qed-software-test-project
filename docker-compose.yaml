@@ -1,0 +1,60 @@
+services:
+  tracking:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    networks:
+    - private
+    command:
+    - mlflow
+    - server
+    - --default-artifact-root=s3://${ARTIFACTS_BUCKET}/experiments
+    - --serve-artifacts
+    - --host=0.0.0.0
+    - --port=5000
+    env_file:
+      - .env
+    depends_on:
+      - minio
+
+  api:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    networks:
+    - private
+    ports:
+    - 5000:5000
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./representativity_predictor:/app/
+    command:
+    - gunicorn
+    - --bind=0.0.0.0:5000
+    - web.run:app
+    environment:
+    - FLASK_APP=web.main
+    env_file:
+      - .env
+    depends_on:
+      - minio
+      - tracking
+
+  minio:
+    image: minio/minio:latest
+    command: [ "server", "/data", "--console-address", "0.0.0.0:9001" ]
+    volumes:
+    - artifacts_storage:/data
+    env_file:
+    - .env
+    networks:
+    - private
+    ports:
+    - 9001:9001
+
+volumes:
+  artifacts_storage:
+
+networks:
+  private:
+    name: private

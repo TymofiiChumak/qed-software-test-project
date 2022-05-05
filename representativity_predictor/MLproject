@@ -1,0 +1,32 @@
+name: main
+docker_env:
+  image: mlflow-executor:latest
+  environment:
+    - MINIO_ROOT_USER
+    - MINIO_ROOT_PASSWORD
+    - MINIO_HOST
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
+    - ARTIFACTS_BUCKET
+
+entry_points:
+  train:
+    parameters:
+      train_data_key: {type: string}
+      nearest_neighbours: {type: float, default: 5}
+      batch_number: {type: float, default: 10}
+      learning_rate: {type: float, default: 0.01}
+      train_epochs: {type: float, default: 100}
+    command: >
+      python -m model.train {train_data_key} \
+        --nearest-neighbours {nearest_neighbours} \
+        --batch-number {batch_number} \
+        --learning-rate {learning_rate} \
+        --train-epochs {train_epochs}
+
+  predict:
+    parameters:
+      model_reference: {type: string}
+      predict_data_key: {type: string}
+    command: >
+      python -m model.predict {model_reference} {predict_data_key}
